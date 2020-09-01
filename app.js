@@ -8,9 +8,11 @@ const express = require('express'),
 const config = require('./config');
 
 //Route files
-const configurationRouter = require('./routes/configuration'),
-      signRouter = require('./routes/sign'),
-      userRouter = require('./routes/user');
+const authRouter = require('./src/routes/auth'),
+      userRouter = require('./src/routes/user'),
+      semesterRouter = require('./src/routes/semester'),
+      subjectRouter = require('./src/routes/subject'),
+      scheduledSubjectRouter = require('./src/routes/scheduledSubject');
 
 //general objects
 const app = express();
@@ -23,8 +25,10 @@ app.use(express.urlencoded(config.urlencoded));
 app.use(express.static(path.join(__dirname, 'public')));
 
 //Routes
-app.use('/config', configurationRouter);
-app.use('/sign', signRouter);
+app.use(authRouter);
 app.use('/user', userRouter);
+app.use('/semester', semesterRouter);
+app.use('/subject', subjectRouter);
+app.use('/scheduledSubject', scheduledSubjectRouter);
 
 module.exports = app;
