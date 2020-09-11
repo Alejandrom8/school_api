@@ -8,6 +8,6 @@ router.post('/many', ScheduledSubjectController.createManyScheduledSubjects);
 router.get('/:scheduledSubjectID', ScheduledSubjectController.getCompleteSubject);
 router.put('/:scheduledSubjectID/subjectCalif', ScheduledSubjectController.updateSubjectCalif);
 router.put('/:scheduledSubjectID/ponderation', ScheduledSubjectController.updatePonderations);
-router.put('/:scheduledSubjectID/profesorName', ScheduledSubjectController.updateProfesor);
+router.put('/:scheduledSubjectID/professorName', ScheduledSubjectController.updateProfessor);
 
 module.exports = router;

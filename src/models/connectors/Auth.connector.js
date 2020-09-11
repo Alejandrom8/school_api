@@ -12,7 +12,7 @@ class AuthConnector {
     /**
      * 
      * @param {String} email - the email of the searched user.
-     * @returns {Promise<Responser.Responser} result
+     * @returns {Promise<Responser.Responser>} result
      * @returns {boolean} result.success - true if the user exists.
      * @returns {object} result.data - an object containing the auth data.
      */

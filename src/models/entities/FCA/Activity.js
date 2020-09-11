@@ -7,7 +7,7 @@ const Entity = require('../Entity');
 class Activity extends Entity {
     /**
      * @param {String} moduleID - the system generated key for the module to
-     * wich this activity belongs.
+     * which this activity belongs.
      * @param {String} content - the instructions for this activity.
      * @param {String} index - the index that sort each module. (1 - n) where n
      * its the number of activities, this number should be restarted for every

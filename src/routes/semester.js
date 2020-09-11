@@ -14,6 +14,4 @@ router.use('/:semesterID/subjects', subjectRouter);
 subjectRouter.get('/', SemesterController.getSemesterSubjects);
 subjectRouter.get('/complete', SemesterController.getCompleteSemesterSubjects);
 
-router.get('/:semesterID/califications', SemesterController.getCalifications);
-
 module.exports = router;

@@ -1,14 +1,9 @@
-const User = require('../models/entities/User');
-
-const express = require('express'),
-      userRouter = express.Router(),
+const router = require('express').Router(),
       UserController = require('../controllers/user.controller'),
       { tokenValidator } = require('../util/validator');
 
-userRouter.use(tokenValidator);
+router.use(tokenValidator);
 
-//need to recive a token as a query param.
-userRouter.get('/', UserController.getUser);
+router.get('/', UserController.getUser);
 
-
-module.exports = userRouter;
+module.exports = router;

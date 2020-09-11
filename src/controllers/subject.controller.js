@@ -4,28 +4,34 @@ const { requestValidator } = require('../util/validator'),
 
 exports.getSubject = [
     (req, res, next) => requestValidator(res, next, req.params, 'subjectID'),
-    async (req, res) => {
+    (req, res) => {
         let { subjectID } = req.params;
-        let result = await SubjectConnector.getSubject(subjectID);
-        res.json(result);
+        SubjectConnector
+            .getSubject(subjectID)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 
 exports.getSubjectsBySemester = [
     (req, res, next) => requestValidator(res, next, req.params, 'semesterID'),
-    async (req, res) => {
+    (req, res) => {
         let semesterID = parseInt(req.params.semesterID);
-        let result = await SubjectConnector.getSubjectsBySemester(semesterID);
-        res.json(result);
+        SubjectConnector
+            .getSubjectsBySemester(semesterID)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 
 exports.getModulesForSubject = [
     (req, res, next) => requestValidator(res, next, req.params, 'subjectID'),
-    async (req, res) => {
+    (req, res) => {
         let {subjectID} = req.params;
-        let result = await CompleteModuleConnector.getCompleteModulesForSubject(subjectID);
-        res.json(result);
+        CompleteModuleConnector
+            .getCompleteModulesForSubject(subjectID)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 

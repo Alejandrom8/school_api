@@ -30,7 +30,7 @@ class ScheduledSubject extends Entity {
      * @param {String} semesterID - the ID of the semester to which this 
      * subject belongs.
      * @param {String} subjectID - the FCA ID for this subject.
-     * @param {String} profesorName - the name of the propfesor that 
+     * @param {String} professorName - the name of the professor that 
      * imparts this subject.
      * @param {String} color - the hexadecimal color representing this
      * sheduledSubject.
@@ -47,7 +47,7 @@ class ScheduledSubject extends Entity {
     constructor(
         semesterID, 
         subjectID, 
-        profesorName, 
+        professorName, 
         color, 
         schedules, 
         califications = {
@@ -58,7 +58,7 @@ class ScheduledSubject extends Entity {
         super('scheduledSubject');
         this.semesterID = semesterID;
         this.subjectID = subjectID;
-        this.profesorName = profesorName;
+        this.professorName = professorName;
         this.color = color;
         this.schedules = schedules;
         this.califications = califications;

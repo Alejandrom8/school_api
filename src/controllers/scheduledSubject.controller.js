@@ -2,7 +2,7 @@ const { requestValidator } = require('../util/validator'),
       ScheduledSubjectConnector = require('../models/connectors/ScheduledSubject.connector'),
       CompleteSubjectConnector = require('../models/connectors/complements/CompleteSubject.connector');
 
-      
+
 exports.createManyScheduledSubjects = [
     (req, res, next) => requestValidator(
         res,
@@ -10,15 +10,12 @@ exports.createManyScheduledSubjects = [
         req.body,
         'scheduledSubjects'
     ),
-    async (req, res) => {
-        let {scheduledSubjects} = req.body, result;
-        try{
-            result = await ScheduledSubjectConnector
-                                .createManyScheduledSubjects(scheduledSubjects);
-        }catch(error){
-            console.log(error);
-        }
-        res.json(result);
+    (req, res) => {
+        let {scheduledSubjects} = req.body;
+        ScheduledSubjectConnector
+            .createManyScheduledSubjects(scheduledSubjects)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 
@@ -26,54 +23,42 @@ exports.getCompleteSubject = [
     (req, res, next) => requestValidator(
         res,
         next,
-        req.params, 
+        req.params,
         'scheduledSubjectID'
     ),
-    async (req, res) => {
-        let {scheduledSubjectID} = req.params, result;
-        try{
-            result = await CompleteSubjectConnector
-                                    .getCompleteSubject(scheduledSubjectID);
-        }catch(error) {
-            console.log(error);
-        }
-        res.json(result);
+    (req, res) => {
+        let {scheduledSubjectID} = req.params;
+        CompleteSubjectConnector
+            .getCompleteSubject(scheduledSubjectID)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 
 exports.getCompleteSubjectsForSemester = [
     (req, res, next) => requestValidator(res, next, req.params, 'semesterID'),
-    async (req, res) => {
-        let {semesterID} = req.params, result;
-        try{
-            result = await CompleteSubjectConnector
-                                    .getCompleteSubjectsForSemester(semesterID);
-        }catch(error){
-            console.log(error);
-        }
-        res.json(result);
+    (req, res) => {
+        let {semesterID} = req.params;
+        CompleteSubjectConnector
+            .getCompleteSubjectsForSemester(semesterID)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 
 exports.updateSubjectCalif = [
     (req, res, next) => requestValidator(
         res,
-        next, 
-        {...req.params, ...req.body}, 
+        next,
+        {...req.params, ...req.body},
         'scheduledSubjectID', 'calif'
     ),
-    async (req, res) => {
+    (req, res) => {
         let {scheduledSubjectID, calif} = {...req.params, ...req.body};
-        let result;
-        try{
-            result = await ScheduledSubjectConnector.updateSubjectCalif(
-                scheduledSubjectID, 
-                calif
-            );
-        }catch(error){
-            console.log(error);
-        }
-        res.json(result);
+        ScheduledSubjectConnector
+            .updateSubjectCalif(scheduledSubjectID, calif)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 
@@ -84,31 +69,21 @@ exports.updatePonderations = [
         {...req.params, ...req.body},
         'scheduledSubjectID', 'ponderation'
     ),
-    async (req, res) => {
-        let {scheduledSubjectID, ponderation} = {...req.params, ...req.body};
-        let result;
-        try{
-            result = await ScheduledSubjectConnector.addPonderation(
-                scheduledSubjectID,
-                ponderation
-            );
-        }catch(error){
-            console.log(error);
-        }
-        res.json(result);
+    (req, res) => {
+        let { scheduledSubjectID, ponderation } = {...req.params, ...req.body};
+        ScheduledSubjectConnector
+            .addPonderation(scheduledSubjectID, ponderation)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];
 
-exports.updateProfesor = [
-    (req, res, next) => requestValidator(res, next, req.body, 'profesorName'),
-    async (req, res) => {
-        let {profesorName} = req.body, result;
-        try{
-            result = await ScheduledSubjectConnector
-                                    .updateProfesor(profesorName);
-        }catch(error){
-            console.log(error);
-        }
-        res.json(result);
+exports.updateProfessor = [
+    (req, res, next) => requestValidator(res, next, req.body, 'professorName'),
+    (req, res) => {
+        let { professorName } = req.body;
+        ScheduledSubjectConnector.updateProfessor(professorName)
+            .then(result => res.json(result))
+            .catch(error => console.log(error));
     }
 ];

@@ -11,13 +11,17 @@ const performQuerySS = async dooer => {
         dooer
     );
 };
- 
+
 class ScheduledSubjectConnector {
 
+    constructor({semesterID}) {
+        this.semesterId = semesterID;
+    }
+
     /**
-     * 
+     *
      * @param {String} subjectID - the system generated key for this subject.
-     * @returns {Promise<Responser.Responser>} an object describing the proccess 
+     * @returns {Promise<Responser.Responser>} an object describing the proccess
      * result.
      */
     static async getScheduledSubject(scheduledSubjectID) {
@@ -55,17 +59,17 @@ class ScheduledSubjectConnector {
     }
 
     static async createScheduledSubject(
-        semesterID, 
-        subjectID, 
-        profesorName, 
-        color, 
+        semesterID,
+        subjectID,
+        profesorName,
+        color,
         schedules
     ) {
         let sso = new ScheduledSubject(
             semesterID,
-            subjectID, 
-            profesorName, 
-            color, 
+            subjectID,
+            profesorName,
+            color,
             schedules
         );
 
@@ -76,18 +80,39 @@ class ScheduledSubjectConnector {
         )
     }
 
-    static async createManyScheduledSubjects(scheduledSubjects) {
-        if(!scheduledSubjects || !scheduledSubjects.length) 
+    async createManyScheduledSubjects(scheduledSubjects) {
+        if(!scheduledSubjects || !scheduledSubjects.length)
             throw 'scheduled subjects is empty';
 
+        for(let sso of scheduledSubjects) {
+            let result = await performQuerySS(
+                async collection => {
+                    await collection.insertOne(new ScheduledSubject(
+                        this.semesterID,
+                        sso.subjectID,
+                        sso.profesorName,
+                        sso.color,
+                        sso.schedules
+                    ))
+                }
+            );
+
+            if(!result.success) {
+                throw `We have a problem when insterting scheduledSubject: Error: ${result.errors}`;
+            }
+        }
         let results = await Promise.all(scheduledSubjects.map(sso => {
-            ScheduledSubjectConnector.createScheduledSubject(
-                sso.semesterID,
-                sso.subjectID,
-                sso.profesorName,
-                sso.color,
-                sso.schedules
-            )
+            return performQuerySS(
+                async collection => {
+                    await collection.insertOne(new ScheduledSubject(
+                        this.semesterID,
+                        sso.subjectID,
+                        sso.profesorName,
+                        sso.color,
+                        sso.schedules
+                    ))
+                }
+            );
         }));
 
         let errorIndex = null;
@@ -95,7 +120,7 @@ class ScheduledSubjectConnector {
         if(results.some((r, i) => (
             !r.success ? errorIndex = i && true : false
         ))) {
-            throw `We have a problem when insterting scheduledSubject: ${sso[errorIndex]}`;
+            throw `We have a problem when insterting scheduledSubject: ${results[errorIndex].errors}`;
         }
 
         return new Responser({
@@ -105,16 +130,16 @@ class ScheduledSubjectConnector {
     }
 
     /**
-     * 
-     * @param {Number} semesterID 
-     * @returns {Promise<Responser.Responser>} an object describing the proccess 
+     *
+     * @param {Number} semesterID
+     * @returns {Promise<Responser.Responser>} an object describing the proccess
      * result.
      */
     static async getScheduledSubjectsBySemester(semesterID) {
         return await performQuerySS(
             async collection => (
                 await new Promise((resolve, reject) => {
-                    collection.find({ 
+                    collection.find({
                         semesterID: semesterID
                     }).toArray(function(err, res){
                         if(err) reject(err);
@@ -126,9 +151,9 @@ class ScheduledSubjectConnector {
     }
 
     /**
-     * 
-     * @param {String} scheduledSubjectID 
-     * @param {Number} calif 
+     *
+     * @param {String} scheduledSubjectID
+     * @param {Number} calif
      */
     static async updateSubjectCalif(scheduledSubjectID, calif) {
         return await performQuerySS(
@@ -168,12 +193,12 @@ class ScheduledSubjectConnector {
         return result;
     }
 
-    static async updateProfesor(scheduledSubjectID, profesorName) {
+    static async updateProfessor(scheduledSubjectID, professorName) {
         return await performQuerySS(
             async collection => (
                 await collection.updateOne(
                     {scheduledSubjectID},
-                    {$set: {profesorName}}
+                    {$set: {professorName}}
                 )
             )
         )

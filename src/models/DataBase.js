@@ -7,37 +7,30 @@ const MongoClient = require('mongodb').MongoClient,
 class DataBase {
     /**
      * 
-     * @returns {object} the mongo client.
+     * @returns {Promise<MongoClient>} the mongo client.
      */
     static async getClient() {
         let client = await MongoClient.connect(
             config.database.mongodb.url, 
             config.database.mongodb.options
         );
-        return DataBase.evalClient(client);
-    }
-
-    static evalClient(client) {
-        if(!client){
-            throw "No se pudo conectar a la base de datos";
-        }
+        if(!client) throw "We can not make a connection with the mongo database.";
         return client;
     }
 
     /**
      * @param {String} [db = 'school'] - the database where will be connected 
      * this client.
-     * @param {String} collection - the name of the collection that will be 
-     * getted.
-     * @returns {Promise<[object, object]>} [collection, client]
+     * @param {String} collection - the name of the collection that will be searched
+     * @returns {Promise<[Collection, MongoClient]>} [collection, client]
      */
     static async getCollection(
         db = config.database.mongodb.dbSchool,
         collection
     ) {
         let client = await DataBase.getClient();
-        let dbmc = client.db(db);
-        return [dbmc.collection(collection), client];
+        let database = client.db(db);
+        return [database.collection(collection), client];
     }
 }
 

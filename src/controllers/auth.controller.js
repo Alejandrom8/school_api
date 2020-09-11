@@ -1,59 +1,49 @@
 const AuthConnector = require('../models/connectors/Auth.connector'),
-      { evalRecivedData, MissingData } = require('../util/validator');
+      { requestValidator } = require('../util/validator');
 
+/**
+ *
+ * @type {((function(*, *=, *=): undefined)|(function(*, *): void))[]}
+ */
 exports.signIn = [
-    (req, res, next) => {
-        let result = evalRecivedData(req.body, 'email', 'password');
-        if(!result.ok){ 
-            res.status(422).send(MissingData(result.evaluated));
-            return
-        }
-        next();
-    },
-    async (req, res) => {
+    (req, res, next) => requestValidator(res, next, req.body, 'email', 'password'),
+    function (req, res) {
         const {email, password} = req.body;
-
-        try{
-            const token = await AuthConnector.auth(email, password);
-            res.json({
-                success: true,
-                data: {token: token}
-            });
-        }catch(error){
-            res.json({
-                success:false,
-                errors: error
+        AuthConnector.auth(email, password)
+            .then( token => {
+                res.json({success: true, data: {token}})
             })
-        }
+            .catch(error => {
+                res.json({success: false, errors: error})
+            });
     }
 ];
 
+/**
+ *
+ * @type {((function(*=, *, *=): void)|(function(*, *): void))[]}
+ */
 exports.signUp = [
-    (req, res, next) => {
+    function (req, res, next) {
         let expectedKeys = ['name', 'lastName', 'email', 'password', 'university', 'career'];
-        let result = evalRecivedData(req.body, ...expectedKeys);
-        if(!result.ok) {
-            res.status(422).send(MissingData(result.evaluated));
-            return
-        }
-        next();
+        requestValidator(req, next, req.body, ...expectedKeys);
     },
-    async (req, res) => {
+    function (req, res) {
         let {email, password} = req.body;
         let {name, lastName, university, career} = req.body;
+        let finalToken;
 
-        try {
-            let {token, sc} = await AuthConnector.createAuth(email, password);
-            let creationResult = await sc.signUp(name, lastName, university, career);
-            if(!creationResult.success) throw creationResult.errors;
-
-            creationResult.data = {token: token};
-            res.json(creationResult);
-        } catch(error) {
-            res.json({
-                success: false,
-                errors: error
+        AuthConnector.createAuth(email, password)
+            .then(({token, sc}) => {
+                finalToken = token;
+                return sc.signUp(name, lastName, university, career)
             })
-        }
+            .then(result => {
+                result.data = {token: finalToken};
+                res.json(result);
+            })
+            .catch(error => {
+                res.json({success:false, errors: error});
+            });
     }
 ];
