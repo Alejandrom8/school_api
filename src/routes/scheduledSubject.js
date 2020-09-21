@@ -4,8 +4,8 @@ const router = require('express').Router(),
 
 router.use(tokenValidator);
 
-router.post('/many', ScheduledSubjectController.createManyScheduledSubjects);
 router.get('/:scheduledSubjectID', ScheduledSubjectController.getCompleteSubject);
+router.patch('/:scheduledSubjectID', ScheduledSubjectController.updateSubject);
 router.put('/:scheduledSubjectID/subjectCalif', ScheduledSubjectController.updateSubjectCalif);
 router.put('/:scheduledSubjectID/ponderation', ScheduledSubjectController.updatePonderations);
 router.put('/:scheduledSubjectID/professorName', ScheduledSubjectController.updateProfessor);

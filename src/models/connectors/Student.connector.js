@@ -1,6 +1,7 @@
 const { performQuery } = require('./Connector'),
       config = require('../../../config'),
-      Student = require('../entities/Student');
+      Student = require('../entities/Student'),
+      ConfigurationConnector = require('./Configuration.connector');
 
 class StudentConnector {
     /**
@@ -31,15 +32,33 @@ class StudentConnector {
             career
         );
 
-        return await performQuery(
+        let result = await performQuery(
             config.database.mongodb.dbSchool,
             'student',
             async collection => (
                 await collection.insertOne(studentObj)
             )
         )
+
+        if(!result.success) throw {
+            error: 'We cannot create the user correctly',
+            status: 500
+        };
+
+        let configResult = await ConfigurationConnector.createGlobalConfig(this.userID);
+        
+        if(!configResult.success) throw {
+            error: 'we cannot create the configuration for this user.',
+            status: 500
+        };
+        
+        return result;
     }
 
+    /**
+     * 
+     * @param {string} userID 
+     */
     static async getStudent(userID) {
         return await performQuery(
             config.database.mongodb.dbSchool,

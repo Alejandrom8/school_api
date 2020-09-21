@@ -2,23 +2,6 @@ const { requestValidator } = require('../util/validator'),
       ScheduledSubjectConnector = require('../models/connectors/ScheduledSubject.connector'),
       CompleteSubjectConnector = require('../models/connectors/complements/CompleteSubject.connector');
 
-
-exports.createManyScheduledSubjects = [
-    (req, res, next) => requestValidator(
-        res,
-        next,
-        req.body,
-        'scheduledSubjects'
-    ),
-    (req, res) => {
-        let {scheduledSubjects} = req.body;
-        ScheduledSubjectConnector
-            .createManyScheduledSubjects(scheduledSubjects)
-            .then(result => res.json(result))
-            .catch(error => console.log(error));
-    }
-];
-
 exports.getCompleteSubject = [
     (req, res, next) => requestValidator(
         res,
@@ -26,8 +9,9 @@ exports.getCompleteSubject = [
         req.params,
         'scheduledSubjectID'
     ),
-    (req, res) => {
-        let {scheduledSubjectID} = req.params;
+    function (req, res) {
+        let { scheduledSubjectID } = req.params;
+
         CompleteSubjectConnector
             .getCompleteSubject(scheduledSubjectID)
             .then(result => res.json(result))
@@ -35,10 +19,33 @@ exports.getCompleteSubject = [
     }
 ];
 
+exports.updateSubject = [
+    (req, res, next) => requestValidator(
+        res, 
+        next, 
+        {...req.body, ...req.params},
+        'scheduledSubjectID', 'elementName', 'elementValue'
+    ),
+    function (req, res) {
+        let {scheduledSubjectID} = req.params;
+        let {elementName, elementValue} = req.body;
+
+        ScheduledSubjectConnector
+            .updateElement(scheduledSubjectID, elementName, elementValue)
+            .then(result => {
+                res.status(200).json(result);
+            })
+            .catch(({status, error}) => {
+                res.status(status).json({success: false, errors: error});
+            })
+    }
+]
+
 exports.getCompleteSubjectsForSemester = [
     (req, res, next) => requestValidator(res, next, req.params, 'semesterID'),
-    (req, res) => {
-        let {semesterID} = req.params;
+    function (req, res) {
+        let { semesterID } = req.params;
+
         CompleteSubjectConnector
             .getCompleteSubjectsForSemester(semesterID)
             .then(result => res.json(result))
@@ -53,8 +60,9 @@ exports.updateSubjectCalif = [
         {...req.params, ...req.body},
         'scheduledSubjectID', 'calif'
     ),
-    (req, res) => {
-        let {scheduledSubjectID, calif} = {...req.params, ...req.body};
+    function (req, res) {
+        let { scheduledSubjectID, calif } = {...req.params, ...req.body};
+
         ScheduledSubjectConnector
             .updateSubjectCalif(scheduledSubjectID, calif)
             .then(result => res.json(result))
@@ -69,8 +77,9 @@ exports.updatePonderations = [
         {...req.params, ...req.body},
         'scheduledSubjectID', 'ponderation'
     ),
-    (req, res) => {
+    function (req, res) {
         let { scheduledSubjectID, ponderation } = {...req.params, ...req.body};
+
         ScheduledSubjectConnector
             .addPonderation(scheduledSubjectID, ponderation)
             .then(result => res.json(result))
@@ -80,9 +89,11 @@ exports.updatePonderations = [
 
 exports.updateProfessor = [
     (req, res, next) => requestValidator(res, next, req.body, 'professorName'),
-    (req, res) => {
+    function (req, res) {
         let { professorName } = req.body;
-        ScheduledSubjectConnector.updateProfessor(professorName)
+
+        ScheduledSubjectConnector
+            .updateProfessor(professorName)
             .then(result => res.json(result))
             .catch(error => console.log(error));
     }

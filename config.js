@@ -13,15 +13,6 @@ module.exports = {
             }
         }
     },
-    session: {
-        secret: 'tv mariposa',
-        resave: false,
-        saveUninitialized: true,
-        cookie: { secure: true }
-    },
-    cookie:{
-        secret: "tv mariposa"
-    },
     urlencoded: {
         extended: false
     }

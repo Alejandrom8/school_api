@@ -9,6 +9,9 @@ class Semester extends Entity {
      * @param {Number} key - the real key of the semester.
      * @param {String} userID - the system generated ID of the user to 
      * which this semester belongs.
+     * @property {Date} date - the date when this semester was created.
+     * @property {object} configuration - this will store all the changeable data
+     * between semesters.
      */
     constructor(key, userID) {
         super('semester');

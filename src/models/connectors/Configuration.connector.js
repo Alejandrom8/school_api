@@ -1,5 +1,6 @@
 const {performQuery} = require('./Connector'),
-      Configuration = require('../entities/Configuration'),
+      GlobalConfig = require('../entities/UI/GlobalConfig'),
+      SubjectConfig = require('../entities/UI/SubjectConfig'),
       config = require('../../../config');
 
 /**
@@ -20,57 +21,97 @@ module.exports = class ConfigurationConnector {
      *
      * @param {String} configurationID
      */
-    static async getConfiguration(configurationID) {
+    static async getConfiguration(query) {
         return await performQueryConf(
             async configCollection => (
-                await configCollection.findOne({configurationID})
+                await configCollection.findOne(query)
             )
         )
     }
 
-    /**
-     *
-     * @param {object} initialConfig
-     * @returns {Promise<object>}
-     */
-    static async createConfiguration(initialConfig) {
-        let configObj = new Configuration(initialConfig);
+    static async setConfigElement(query, {elementName, elementValue}) {
+        let updater = {$set: {}};
+        updater.$set[elementName] = elementValue;
+
         return await performQueryConf(
-            async configCollection => (
-                await configCollection.insertOne(configObj)
+            async collection => (
+                await collection.updateOne(query,updater)
             )
         )
     }
 
-    static async addSemesterConfig(configurationID, semesterConfig) {
+    static async createGlobalConfig(userID) {
+        let gobj = new GlobalConfig(userID);
         return await performQueryConf(
-            async collection => {
-
-            }
+            async collection => await collection.insertOne(gobj)
         )
     }
 
-    static async setConfigElement(configurationID, {elementName, elementValue}) {
-        return await performQueryConf(
-            async collection => {
-                const updater = {$set: {}};
-                updater.$set[elementName] = elementValue;
-                return collection.updateOne(
-                    {configurationID},
-                    updater
-                );
-            }
-        )
-    }
-
-    static async setActivityState(configurationID, activityID, activityState) {
+    static async updateSelectedSemester(userID, semesterID) {
         return await performQueryConf(
             async collection => (
                 await collection.updateOne(
-                    {configurationID, "activitiesConfig.$.activityID": activityID},
-                    { $set: {"activitiesConfig.$.state": activityState} }
+                    {userID: userID, type: 'global'},
+                    {$set: { selectedSemester: semesterID } }
                 )
             )
         )
+    }
+
+    static async createSubjectConfig(semesterID, scheduledSubjectID) {
+        let sobj = new SubjectConfig(semesterID, scheduledSubjectID);
+        return await performQueryConf(
+            async collection => await collection.insertOne(sobj)
+        )
+    }
+
+    static async activityExists(scheduledSubjectID, activityID) {
+        let result = await performQueryConf(
+            async collection => (
+                await collection.findOne({
+                    scheduledSubjectID,
+                    activitiesProgress: {$elemMatch: {activityID}}
+                })
+            )
+        );
+        return result.success;
+    }
+
+    static async createActivityState(scheduledSubjectID, activityID, state) {
+        let nas = {activityID, state};
+        return await performQueryConf(
+            async collection => (
+                await collection.updateOne(
+                    {scheduledSubjectID},
+                    {$push: {activitiesProgress: nas}}
+                )
+            )
+        )
+    }
+
+    static async updateActivitiesProgress(scheduledSubjectID, activityID, activityState) {
+        let exists = await ConfigurationConnector.activityExists(scheduledSubjectID, activityID);
+        if(!exists) {
+            let result = await ConfigurationConnector.createActivityState(scheduledSubjectID, activityID, activityState);
+            return result;
+        }else{
+            console.log("update");
+            let result = await performQueryConf(
+                async collection => (
+                    await collection.updateOne(
+                        {
+                            scheduledSubjectID, 
+                            activitiesProgress: {
+                                $elemMatch: {
+                                    "activityID": activityID
+                                }
+                            }
+                        },
+                        {$set: {"activitiesProgress.$.state": activityState} }
+                    )
+                )
+            )
+            return result;
+        }
     }
 }

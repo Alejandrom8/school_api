@@ -9,12 +9,14 @@ exports.signIn = [
     (req, res, next) => requestValidator(res, next, req.body, 'email', 'password'),
     function (req, res) {
         const {email, password} = req.body;
-        AuthConnector.auth(email, password)
-            .then( token => {
-                res.json({success: true, data: {token}})
+
+        AuthConnector
+            .auth(email, password)
+            .then(({token, refresh_token}) => {
+                res.status(200).json({success: true, data: {token, refresh_token}})
             })
             .catch(error => {
-                res.json({success: false, errors: error})
+                res.status(401).json({success: false, errors: error})
             });
     }
 ];
@@ -31,19 +33,60 @@ exports.signUp = [
     function (req, res) {
         let {email, password} = req.body;
         let {name, lastName, university, career} = req.body;
-        let finalToken;
+        let finalToken, finalRefreshToken;
 
-        AuthConnector.createAuth(email, password)
-            .then(({token, sc}) => {
+        AuthConnector
+            .createAuth(email, password)
+            .then(({token, refresh_token, sc}) => {
                 finalToken = token;
+                finalRefreshToken = refresh_token;
                 return sc.signUp(name, lastName, university, career)
             })
             .then(result => {
-                result.data = {token: finalToken};
-                res.json(result);
+                result.data = {
+                    token: finalToken,
+                    refresh_token: finalRefreshToken
+                };
+                res.status(200).json(result);
             })
-            .catch(error => {
-                res.json({success:false, errors: error});
+            .catch(({error, status}) => {
+                res.status(status).json({success:false, errors: error});
             });
     }
 ];
+
+exports.refresh = [
+    (req, res, next) => requestValidator(
+        res, 
+        next, 
+        req.body, 
+        'refresh_token'
+    ),
+    function (req, res) {
+        let {refresh_token} = req.body;
+        AuthConnector
+            .refreshToken(refresh_token)
+            .then( token => {
+                res.status(200).json({success: true, data: {token}});
+            })
+            .catch(({status, error}) => {
+                res.status(status).json({success: false, errors: error});
+            });
+    }
+];
+
+
+exports.logout = [
+    (req, res, next) => requestValidator(res, next, req, 'userID'),
+    function (req, res) {
+        let {userID} = req;
+        AuthConnector
+            .logout(userID)
+            .then(() => {
+                res.status(200);
+            })
+            .catch(({status, error}) => {
+                res.status(status).json({success: false, errors: error});
+            });
+    }
+]

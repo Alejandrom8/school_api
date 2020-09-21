@@ -1,7 +1,11 @@
 const router = require('express').Router(),
-      ConfigurationController = require('../controllers/configuration.controller');
+      ConfigurationController = require('../controllers/configuration.controller'),
+      {tokenValidator} = require('../util/validator');
 
-router.put('/:configurationID/selectedSemester', ConfigurationController.setSelectedSemester);
-router.put('/:configurationID/activityState', ConfigurationController.setActivityState);
+router.use(tokenValidator);
+
+router.patch('/selectedSemester', ConfigurationController.setSelectedSemester);
+router.put('/scheduledSubject/:scheduledSubjectID/activityState', ConfigurationController.setActivityState);
+router.get('/scheduledSubject/:scheduledSubjectID', ConfigurationController.getSubjectConfig);
 
 module.exports = router;

@@ -2,7 +2,8 @@ const { performQuery } = require('./Connector'),
       config = require('../../../config'),
       Semester = require('../entities/Semester'),
       Responser = require('../sendData/Responser'),
-      ScheduledSubjectConnector = require('./ScheduledSubject.connector');
+      ScheduledSubjectConnector = require('./ScheduledSubject.connector'),
+      ConfigurationConnector = require('./Configuration.connector');
 
 class SemesterConnector {
 
@@ -24,8 +25,16 @@ class SemesterConnector {
             )
         );
 
-        if(!semesterCreationResult.success)
-            throw 'The semester could not be created.';
+        if(!semesterCreationResult.success) throw {
+            error: 'The semester could not be created.',
+            status: 500
+        };
+        
+        let updateResult = await ConfigurationConnector.updateSelectedSemester(userID, semObj.semesterID);
+
+        if(!updateResult.success) {
+            console.log("We cannot put the configuration correctly");
+        }
 
         return new ScheduledSubjectConnector({
             semesterID: semObj.semesterID
@@ -48,6 +57,10 @@ class SemesterConnector {
         )
     }
 
+    /**
+     * 
+     * @param {string} userID 
+     */
     static async getAllSemestersForUser(userID) {
         return await performQuery(
             config.database.mongodb.dbSchool,

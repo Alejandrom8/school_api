@@ -12,6 +12,7 @@ const authRouter = require('./src/routes/auth'),
       userRouter = require('./src/routes/user'),
       semesterRouter = require('./src/routes/semester'),
       subjectRouter = require('./src/routes/subject'),
+      configurationRouter = require('./src/routes/configuration');
       scheduledSubjectRouter = require('./src/routes/scheduledSubject');
 
 //general objects
@@ -30,5 +31,6 @@ app.use('/user', userRouter);
 app.use('/semester', semesterRouter);
 app.use('/subject', subjectRouter);
 app.use('/scheduledSubject', scheduledSubjectRouter);
+app.use('/configuration', configurationRouter);
 
 module.exports = app;

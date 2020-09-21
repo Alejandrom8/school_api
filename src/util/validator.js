@@ -18,7 +18,7 @@ exports.evalRecivedData = (recived, ...expected) => {
 
     result.evaluated = expected.map( expectedKey => {
         let itsOk = recivedKeys.some( key => {
-            return key == expectedKey && recived[key] != null && recived[key] != "";
+            return key === expectedKey && recived[key] !== null && recived[key] !== "";
         })
         return itsOk ? null : expectedKey;
     });
@@ -36,6 +36,7 @@ exports.MissingData = (data) => {
 exports.requestValidator = (res, next, recived, ...expected) => {
     let result = exports.evalRecivedData(recived, ...expected);
     if(!result.ok){
+        console.log(result.evaluated);
         res.status(422).send(exports.MissingData(result.evaluated));
         return
     }
@@ -44,17 +45,16 @@ exports.requestValidator = (res, next, recived, ...expected) => {
 
 exports.tokenValidator = (req, res, next) => {
     const tokenHeader = req.headers.authorization;
-
     if(tokenHeader) {
         let token = tokenHeader.split(' ')[1];
 
         if(token) {
-            JWT.verify(token, config.authJwtSecret, (error, { user }) => {
-                if(!error) {
-                    req.userID = user;
+            JWT.verify(token, config.authJwtSecret, (error, data) => {
+                if(!error && data.type === 'auth') {
+                    req.userID = data.userID;
                     next();
                 }else{
-                    res.sendStatus(403);
+                    res.status(403).json({success: false, errors: 'Access denied'});
                 }
             });
         }else{

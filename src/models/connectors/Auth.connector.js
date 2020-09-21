@@ -1,10 +1,10 @@
 const { performQuery } = require('./Connector'),
       config = require('../../../config'),
       Auth = require('../entities/Auth'),
-      StudentConnector = require('./Student.connector'),
       crypt = require('../../util/crypt'),
       JWT = require('jsonwebtoken'),
-      Responser = require('../sendData/Responser');
+      Responser = require('../sendData/Responser'),
+      {genRandomKey} = require('../../util/generators');
 
 
 class AuthConnector {
@@ -30,14 +30,35 @@ class AuthConnector {
     /**
      * This method generates a token with the ID of the authenticated user.
      * @param {String} userID - the system generated ID to identify this token.
-     * @returns {String} the generated json web token.
+     * @returns {Promise<String>} the generated json web token.
      */
-    static genToken(userID) {
-        return JWT.sign(
-            {user: userID}, 
-            config.authJwtSecret,
-            {expiresIn: '1h'} //this token expires in one hour
-        )
+    static async genToken(userID, type) {
+        let expireTime = type === 'auth' ? 900 : '7d';
+        return await new Promise((resolve, reject) => {
+            JWT.sign(
+                {
+                    userID: userID,
+                    type: type
+                }, 
+                config.authJwtSecret,
+                {expiresIn: expireTime},
+                (err, encoded) => {
+                    if(err) reject(err);
+                    resolve(encoded);
+                }
+            )
+        });
+    }
+
+    static async refreshToken(refresh_token) {
+        let data = JWT.verify(refresh_token, config.authJwtSecret);
+        if(data.type !== 'refresh') throw {
+            status: 401, 
+            error: 'the refresh token is invalid'
+        }
+
+        let token = await AuthConnector.genToken(data.userID, 'auth');
+        return token;
     }
 
     /**
@@ -57,8 +78,9 @@ class AuthConnector {
         );
         if(!passwordIsValid) throw 'The password is not valid';
 
-        let token = AuthConnector.genToken(user.data.userID);
-        return token;
+        let token = await AuthConnector.genToken(user.data.userID, 'auth');
+        let refresh_token = await AuthConnector.genToken(user.data.userID, 'refresh');
+        return {token, refresh_token};
     }
 
     /**
@@ -74,7 +96,10 @@ class AuthConnector {
     static async createAuth(email, password) {
         let exists = await AuthConnector.userExists(email);
         
-        if(exists.success) throw 'the user exists';
+        if(exists.success) throw {
+            error: 'the user already exists',
+            status: 409
+        };
 
         let auther = await Auth.getInstance(email, password);
         let result = await performQuery(
@@ -85,14 +110,34 @@ class AuthConnector {
             }
         )
 
-        if(!result.success) throw 'We cannot create the user authentication';
+        if(!result.success) throw {
+            error: 'We cannot create the user authentication',
+            status: 500
+        };
 
-        let token = AuthConnector.genToken(auther.userID);
+        let token = await AuthConnector.genToken(auther.userID, 'auth');
+        let refresh_token = await AuthConnector.genToken(auth.userID, 'refresh');
 
         return {
-            token: token,
+            token,
+            refresh_token,
             sc: new StudentConnector(auther.userID, auther.email)
         }
+    }
+
+    static async logout(userID) {
+        let result = await performQuery(
+            config.database.mongodb.dbSchool,
+            'refresh_token',
+            async collection => (
+                await collection.deleteOne({userID})
+            )
+        );
+
+        if(!result.success) throw {
+            status: 404,
+            error: 'resource not found, the user is not loged in'
+        };
     }
 }
 
