@@ -3,9 +3,8 @@ const { performQuery } = require('./Connector'),
       Auth = require('../entities/Auth'),
       crypt = require('../../util/crypt'),
       JWT = require('jsonwebtoken'),
-      Responser = require('../sendData/Responser'),
-      {genRandomKey} = require('../../util/generators');
-
+      StudentConnector = require('./Student.connector'),
+      Responser = require('../sendData/Responser')
 
 class AuthConnector {
 
@@ -24,7 +23,7 @@ class AuthConnector {
                 await collection.findOne({email: email})
             )
         )
-        return result;
+        return result
     }
 
     /**
@@ -43,22 +42,24 @@ class AuthConnector {
                 config.authJwtSecret,
                 {expiresIn: expireTime},
                 (err, encoded) => {
-                    if(err) reject(err);
-                    resolve(encoded);
+                    if(err) {
+                        reject(err)
+                    }
+                    resolve(encoded)
                 }
             )
-        });
+        })
     }
 
     static async refreshToken(refresh_token) {
-        let data = JWT.verify(refresh_token, config.authJwtSecret);
+        let data = JWT.verify(refresh_token, config.authJwtSecret)
         if(data.type !== 'refresh') throw {
             status: 401, 
             error: 'the refresh token is invalid'
         }
 
-        let token = await AuthConnector.genToken(data.userID, 'auth');
-        return token;
+        let token = await AuthConnector.genToken(data.userID, 'auth')
+        return token
     }
 
     /**
@@ -69,18 +70,18 @@ class AuthConnector {
      * @returns {Promise<String>} a token for the authenticated user.
      */
     static async auth(email, password) {
-        let user = await AuthConnector.userExists(email);
-        if(!user.success) throw 'The user doesnt exists';
+        let user = await AuthConnector.userExists(email)
+        if(!user.success) throw 'The user doesnt exists'
 
         let passwordIsValid = await crypt.comparePasswords(
             password, 
             user.data.password
-        );
-        if(!passwordIsValid) throw 'The password is not valid';
+        )
+        if(!passwordIsValid) throw 'The password is not valid'
 
-        let token = await AuthConnector.genToken(user.data.userID, 'auth');
-        let refresh_token = await AuthConnector.genToken(user.data.userID, 'refresh');
-        return {token, refresh_token};
+        let token = await AuthConnector.genToken(user.data.userID, 'auth')
+        let refresh_token = await AuthConnector.genToken(user.data.userID, 'refresh')
+        return { token, refresh_token }
     }
 
     /**
@@ -94,29 +95,29 @@ class AuthConnector {
      * with the authenticated user data.
      */
     static async createAuth(email, password) {
-        let exists = await AuthConnector.userExists(email);
+        let exists = await AuthConnector.userExists(email)
         
         if(exists.success) throw {
             error: 'the user already exists',
             status: 409
-        };
+        }
 
-        let auther = await Auth.getInstance(email, password);
+        let auther = await Auth.getInstance(email, password)
         let result = await performQuery(
             config.database.mongodb.dbSchool,
             'auth',
-            async collection => {
-                return await collection.insertOne(auther)
-            }
+            async collection => (
+                await collection.insertOne(auther)
+            )
         )
 
         if(!result.success) throw {
             error: 'We cannot create the user authentication',
             status: 500
-        };
+        }
 
-        let token = await AuthConnector.genToken(auther.userID, 'auth');
-        let refresh_token = await AuthConnector.genToken(auth.userID, 'refresh');
+        let token = await AuthConnector.genToken(auther.userID, 'auth')
+        let refresh_token = await AuthConnector.genToken(auther.userID, 'refresh')
 
         return {
             token,
@@ -132,13 +133,13 @@ class AuthConnector {
             async collection => (
                 await collection.deleteOne({userID})
             )
-        );
+        )
 
         if(!result.success) throw {
             status: 404,
             error: 'resource not found, the user is not loged in'
-        };
+        }
     }
 }
 
-module.exports = AuthConnector;
+module.exports = AuthConnector

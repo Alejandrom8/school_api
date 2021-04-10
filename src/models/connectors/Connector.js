@@ -27,7 +27,10 @@ exports.performQuery = async (db, collectionName, querier) => {
         );
         let queryResult = await querier(collection);
         
-        if(!queryResult) throw 'There was an error while performing this query';
+        if(!queryResult) throw { 
+            error: 'There was an error while performing this query',
+            status: 500
+        }
 
         if(!('result' in queryResult) && !queryResult)
             throw `No hay resultados para esta petición o hubo un error.`;
